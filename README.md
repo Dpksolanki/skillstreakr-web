@@ -1,75 +1,843 @@
-# React + TypeScript + Vite
+# SkillStreakr
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Learn any skill consistently: track daily practice, never forget what to revise, see your progress, and grow with friends or a mentor.
 
-Currently, two official plugins are available:
+This file explains the **whole product**: what it is, who it is for, every feature, every module and how we build it, the architecture, the data, the flows, the plans and pricing, and the roadmap.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Document | What it covers |
+|---|---|
+| **README.md** (this file) | The full project |
+| [STACK.md](STACK.md) | The frontend stack: every tool, why we chose it, how it is set up |
+| [CHECKS.md](CHECKS.md) | Every check (automatic and manual) that protects the code |
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Table of contents
 
-## Expanding the ESLint configuration
+1. [What SkillStreakr is](#1-what-skillstreakr-is)
+2. [This repository](#2-this-repository)
+3. [Who it is for](#3-who-it-is-for)
+4. [The problem we solve](#4-the-problem-we-solve)
+5. [Any skill, not only coding (templates)](#5-any-skill-not-only-coding-templates)
+6. [What the user gets](#6-what-the-user-gets)
+7. [User journeys](#7-user-journeys)
+8. [All 45 features, by version](#8-all-45-features-by-version)
+9. [Modules and how we build each one](#9-modules-and-how-we-build-each-one)
+10. [Architecture](#10-architecture)
+11. [Data model](#11-data-model)
+12. [Main flows](#12-main-flows)
+13. [API overview](#13-api-overview)
+14. [Security and privacy](#14-security-and-privacy)
+15. [Scalability rules](#15-scalability-rules)
+16. [SEO plan](#16-seo-plan)
+17. [Plans and pricing](#17-plans-and-pricing)
+18. [Running cost](#18-running-cost)
+19. [Roadmap and current status](#19-roadmap-and-current-status)
+20. [Hosting and domains](#20-hosting-and-domains)
+21. [The name](#21-the-name)
+22. [Mistakes we already prevented](#22-mistakes-we-already-prevented)
+23. [Glossary](#23-glossary)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 1. What SkillStreakr is
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+SkillStreakr is a web app where anyone can **learn any skill consistently**. Every day you log what you practised. The app keeps your streak, reminds you what to revise, shows your progress, and lets you grow with friends or a mentor.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+It has two goals at the same time:
 
+| Goal | How |
+|---|---|
+| A real product for real users | Multi-user app: anyone can sign up and track their own skills |
+| A learning project for the builder | Every feature teaches one important engineering skill: auth, SQL, queues, S3, webhooks, AI, payments |
+
+**First user:** the builder, tracking JavaScript, DSA, System Design, Spoken English and Node.js from day one.
+
+---
+
+## 2. This repository
+
+SkillStreakr is split into **two repositories**:
+
+| Repository | What it is | Runs on |
+|---|---|---|
+| [skillstreakr-api](https://github.com/Dpksolanki/skillstreakr-api) | Backend: Node.js + Express + TypeScript REST API | `http://localhost:4000` |
+| **skillstreakr-web** (this one) | Frontend: React + Vite single-page app | `http://localhost:5173` |
+
+### Run it locally
+
+You need Node.js 24 LTS or newer and npm. Start the API first (see its README) so the app has data.
+
+```bash
+git clone https://github.com/Dpksolanki/skillstreakr-web.git
+cd skillstreakr-web
+npm install
+npm run dev                 # http://localhost:5173
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+| Command | What it does |
+|---|---|
+| `npm run dev` | Starts the dev server with hot reload on port 5173 |
+| `npm run build` | Type-checks (`tsc -b`), then builds static files into `dist/` |
+| `npm run preview` | Serves the built `dist/` locally |
+| `npm run lint` | Runs ESLint |
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+The dev server always uses port **5173**. If the port is busy it stops instead of moving to another port, because the API's CORS setting allows only `http://localhost:5173`.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Environment variables
+
+| Variable | Example | Meaning |
+|---|---|---|
+| `VITE_API_URL` | `http://localhost:4000/v1` | Base URL of the API (added with the API client) |
+
+Only variables that start with `VITE_` reach the browser, and anyone can read them. Never put a secret in one.
+
+### Folder layout
 
 ```
+src/
+├── main.tsx              app entry: QueryClientProvider + RouterProvider
+├── index.css             Tailwind + the shadcn theme (colours, dark mode, font)
+├── routeTree.gen.ts      generated by the router plugin, never edit
+├── routes/               one file = one page (file-based routing)
+│   ├── __root.tsx        layout around every page: header, <Outlet />, devtools
+│   ├── index.tsx         /
+│   └── login.tsx         /login
+├── features/             one folder per feature: api.ts, hooks.ts, components/, types.ts
+├── components/ui/        shadcn components (button, card, input, label)
+└── lib/                  query-client.ts, utils.ts (cn), api-client.ts (next)
+```
+
+Imports use the `@/` alias for `src/`, for example `import { Button } from "@/components/ui/button"`.
+
+---
+
+## 3. Who it is for
+
+| User type | Example | Their problem |
+|---|---|---|
+| **Job switcher** | Developer preparing for a senior role | Too much to learn (DSA, system design, English); loses track; streak breaks |
+| **Student / fresher** | Placement preparation | Doesn't know what is done and what is left |
+| **Any self-learner** | Guitar, Spanish, drawing, public speaking | No simple way to stay consistent and see progress |
+| **Study group / friends** | 5 friends preparing together | Want healthy competition and motivation |
+| **Mentor / coach / bootcamp** | Teacher with 30 students | Can't see who is practising and who is falling behind |
+
+---
+
+## 4. The problem we solve
+
+| What people use today | What is missing | What SkillStreakr gives |
+|---|---|---|
+| Google Sheet / Excel | Manual, no reminders, graphs by hand | Automatic stats, reminders, charts |
+| Notion | You build everything yourself; no streak or revision | Ready-made logs, streaks, revision, goals |
+| LeetCode | Only coding problems | Any skill in one place |
+| Duolingo-style apps | One subject, fixed content | Your own skills, your own plan |
+| Habit apps | Only "done / not done" | Built for learning: notes, revision, milestones, mentor |
+| WhatsApp study group | Only chat, no tracking | Leaderboard, challenges, mentor view |
+
+---
+
+## 5. Any skill, not only coding (templates)
+
+A user can create **any skill**: Guitar, Spanish, Drawing, Public Speaking, Cooking, Fitness, Chess, System Design and so on.
+
+Every skill uses a **template**. The template only decides which extra fields and screens the skill shows. The core (logs, streaks, goals, revision, stats) is the same for every skill.
+
+| Template | Good for | Extra things it adds |
+|---|---|---|
+| **General** | Any skill (guitar, drawing, fitness) | Time + notes + milestones |
+| **Practice problems** | DSA, maths, chess puzzles, music exercises | Problem list with topic, difficulty, link, attempts, "solved alone?", revision dates |
+| **Language** | English, Spanish, Hindi | Phrase list, daily writing, speaking recordings, AI writing correction (Pro) |
+| **Course / book** | Online course, book | Chapters/lessons with progress percentage |
+| **Project** | Building something | Tasks, GitHub link, commits logged automatically by webhook |
+
+| User | Skill | Template |
+|---|---|---|
+| Developer | DSA | Practice problems |
+| Developer | Spoken English | Language |
+| Developer | System Design | Course / book |
+| Musician | Guitar | General |
+| Student | Spanish | Language |
+| Builder | SkillStreakr itself | Project |
+
+**Design rule:** templates are data, not separate code. There is one `skills` table with a `template` column and a `details` JSONB column for template-specific fields. A new template never needs a new table.
+
+---
+
+## 6. What the user gets
+
+### 6.1 Every day
+
+| Feature | What it means for the user |
+|---|---|
+| **Today's log** | "1 hour DSA, 30 min English, 20 min guitar", done in 30 seconds |
+| **Streak** | "I practised 21 days in a row." The fear of breaking it brings you back |
+| **Daily goal** | "2 hours a day" (overall or per skill) with a progress bar |
+| **Reminder** | Evening email or notification: "You haven't logged today" |
+
+### 6.2 Organise learning
+
+| Feature | What it means |
+|---|---|
+| **Skills** | Your own list of skills, each with its template |
+| **Roadmap / milestones** | Plan per skill: topics by week, done or pending |
+| **Notes** | Markdown notes per skill and topic |
+| **Practice items** | Problems or exercises you did, with attempts |
+| **Revision list** | "Do these 5 again today" so you don't forget |
+| **Flashcards** | 10 cards a day with spaced repetition |
+| **Recordings** | Record speaking or music practice, listen later |
+
+### 6.3 See progress
+
+| Feature | What it means |
+|---|---|
+| **Dashboard** | This week vs last week, per skill |
+| **Heatmap** | Year-long activity graph, like GitHub |
+| **Weekly report email** | Sunday: "18 hours this week, 14 problems, 21-day streak" |
+| **Badges** | "100 problems", "30-day streak": small wins |
+
+### 6.4 With friends or a mentor
+
+| Feature | What it means |
+|---|---|
+| **Groups** | A group with friends or a class |
+| **Leaderboard** | Who practised most this week |
+| **Challenges** | "30 days of DSA" or "30 days of guitar" together |
+| **Mentor view** | A mentor sees each student's progress and who is falling behind |
+| **Comments** | Mentor or friends comment on a weekly review |
+| **Share report** | A progress link for a friend or LinkedIn |
+
+### 6.5 AI helper (Pro)
+
+| Feature | What it means |
+|---|---|
+| **Ask my notes** | "What is the event loop?", answered from your own notes |
+| **Writing corrector** | Write a paragraph in a language skill; get the mistakes and a better version |
+| **AI quiz** | Questions made from your notes |
+| **Study planner** | "Plan my next week based on my weak topics" |
+
+### 6.6 The five features users come back for
+
+1. Logging in 30 seconds.
+2. Streak and daily goal.
+3. Dashboard.
+4. Revision list (problems and flashcards).
+5. Reminders.
+
+If these five are slow or confusing, users leave. They get built best.
+
+---
+
+## 7. User journeys
+
+### 7.1 First day of a new user
+
+```
+Signup (email or Google)
+  -> set timezone + daily goal
+  -> add skills: "DSA" (Practice problems), "English" (Language), "Guitar" (General)
+  -> log today: DSA 60 min (2 problems), English 20 min (writing), Guitar 30 min
+  -> dashboard: streak 1, 110 / 120 min goal
+```
+
+### 7.2 A normal day
+
+```
+Morning  -> dashboard: "Revise 3 problems + 10 flashcards today"
+Day      -> practise; after each session, log it (30 seconds)
+Evening  -> nothing logged yet? reminder email
+Night    -> streak +1, group leaderboard updates
+Sunday   -> weekly report email + weekly review form
+         -> mentor comments: "Spend more time on DP"
+```
+
+### 7.3 A study group
+
+```
+Asha creates group "DSA Squad" -> invites 4 friends by email
+  -> each friend accepts the invite
+  -> Asha starts challenge "30 days, 2 problems a day"
+  -> everyone logs daily -> leaderboard + activity feed update
+  -> day 30 -> badges for those who finished
+```
+
+### 7.4 A mentor
+
+```
+Mentor creates group "Batch 7" with role MENTOR
+  -> 30 students join
+  -> mentor view: table of students (this week's hours, streak, last log)
+  -> sorted by "falling behind" -> mentor comments on their weekly reviews
+```
+
+### 7.5 Sharing progress
+
+```
+User clicks "Share this month"
+  -> app creates a signed link that expires: skillstreakr.com/r/<token>
+  -> friend opens it on WhatsApp -> preview shows title, numbers and an image
+  -> after expiry -> "This link has expired"
+```
+
+---
+
+## 8. All 45 features, by version
+
+Build one version at a time. The next version starts only when the current one is finished **and** deployed.
+
+### v1: Core (Months 1–2): 12 features
+
+| # | Feature | What it does | Engineering skill |
+|---|---|---|---|
+| 1 | Signup / login (email + password) | Create an account, sign in | Password hashing, validation |
+| 2 | Session (access + refresh token) | Stay logged in, log out safely | Cookies, token rotation |
+| 3 | Login with Google / GitHub | One-click login | OAuth 2.0 |
+| 4 | Profile + settings | Name, timezone, daily goal | Timezones |
+| 5 | **Skills + templates** | Create any skill with a template | Data modelling, JSONB |
+| 6 | Daily log | Per skill: minutes, note, type of work | CRUD, Postgres |
+| 7 | Roadmap / milestones | Plan per skill, done or pending | Relations |
+| 8 | Notes | Markdown notes per skill/topic | Text storage, rendering |
+| 9 | Practice items | Problems/exercises with attempts | Data modelling |
+| 10 | Revision list | "Do again in N days" | Date logic |
+| 11 | Streak + dashboard stats | Streak, hours, per-skill stats | SQL window functions, caching |
+| 12 | Weekly review | Weekly form: learned, stuck, next plan | Forms |
+
+### v2: Engagement (Months 3–4): 10 features
+
+| # | Feature | What it does | Engineering skill |
+|---|---|---|---|
+| 13 | Daily reminder email | "You haven't logged today" | Cron, queue, email |
+| 14 | Weekly report email | Sunday summary | Background jobs, templates |
+| 15 | Flashcards | Spaced repetition (SM-2) | Algorithms, transactions |
+| 16 | Language tools | Phrase list + daily writing | Template-specific features |
+| 17 | Recordings | Upload speaking/music practice | S3 presigned upload |
+| 18 | Data export (CSV) | Download all data with a signed link | Streams, S3 |
+| 19 | GitHub webhook | Commits logged automatically (Project template) | Webhooks, HMAC, idempotency |
+| 20 | Heatmap | Year-long activity graph | React, charts |
+| 21 | Charts | Weekly and monthly graphs | Data visualisation |
+| 22 | In-app notifications | Bell icon for reminders and badges | SSE (real-time) |
+
+### v3: Social / multi-user (Months 5–6): 10 features
+
+| # | Feature | What it does | Engineering skill |
+|---|---|---|---|
+| 23 | Public profile (opt-in) | `skillstreakr.com/u/name` | Privacy, SEO, SSR |
+| 24 | Share report link | Expiring link with a preview image | Signed links, OG images |
+| 25 | Groups / cohorts | Friends or a class together | Many-to-many, permissions |
+| 26 | Leaderboard | Weekly ranking in a group | Redis sorted sets |
+| 27 | Mentor role | Mentor sees students' progress | Roles (RBAC) |
+| 28 | Comments | On weekly reviews | Relations, notifications |
+| 29 | Invites | Join a group by email | Tokens, emails |
+| 30 | Badges | Achievements | Event-driven logic |
+| 31 | Challenges | "30 days of X" in a group | Scheduling, state |
+| 32 | Activity feed | What the group did | Feeds, cursor pagination |
+
+### v4: AI + paid (Months 7–8): 8 features
+
+| # | Feature | What it does | Engineering skill |
+|---|---|---|---|
+| 33 | Ask my notes | Q&A over your notes | RAG, embeddings, pgvector |
+| 34 | Writing corrector | Correct writing in language skills | LLM API, structured output |
+| 35 | Study planner | Next week's plan from your data | Tool calling / agents |
+| 36 | AI quiz | Questions from your notes | Prompting, evals |
+| 37 | MCP server | AI apps can read your SkillStreakr data | MCP |
+| 38 | Free vs Pro | Limits for Free; AI and more for Pro | Feature flags |
+| 39 | Payments | Monthly subscription | Payment webhooks, billing |
+| 40 | Usage limits | AI calls per day | Rate limiting, metering |
+
+### Platform (built alongside): 5 features
+
+| # | Feature | When |
+|---|---|---|
+| 41 | Admin panel (users, groups, plans, abuse) | v3 |
+| 42 | Delete account + download my data | v2 |
+| 43 | Email verification + forgot password | End of v1 |
+| 44 | Rate limiting | From v1 |
+| 45 | Logs, monitoring, alerts | Basic in v1, full in v3 |
+
+### Summary
+
+| Version | Features | When | Focus |
+|---|---|---|---|
+| v1 Core | 12 | Months 1–2 | Base, auth, tracking |
+| v2 Engagement | 10 | Months 3–4 | Jobs, email, S3, webhooks |
+| v3 Social | 10 | Months 5–6 | Multi-user, roles, groups, SEO |
+| v4 AI + Paid | 8 | Months 7–8 | AI, payments |
+| Platform | 5 | Alongside | Security, admin, monitoring |
+| **Total** | **45** | **About 8 months** | |
+
+---
+
+## 9. Modules and how we build each one
+
+The backend is one app split into modules (a **modular monolith**). Each module lives in `modules/v1/<name>/` and has the same files:
+
+```
+modules/v1/<name>/
+├── index.ts                public entry: exports the router
+├── <name>.route.ts         URL -> dispatcher(controller function)
+├── <name>.controller.ts    plain functions: read the request, call the service, return data
+├── <name>.service.ts       class: business rules, transactions
+├── <name>.repository.ts    class: database queries only
+├── <name>.schema.ts        Zod schemas for the request body, params and query
+└── <name>.constant.ts      constants (optional)
+```
+
+Rule: a module uses another module **only through its service class**, never through its repository or internal files.
+
+| Module | Features | What it owns | How we build it |
+|---|---|---|---|
+| `health` | Platform | `/v1/health` | Returns status; later checks Postgres (`SELECT 1`) and Redis (`PING`) |
+| `auth` | 1, 2, 3, 43 | Signup, login, tokens, OAuth, email verification, password reset | argon2 password hashes; jose JWT access token (15 min) in an HttpOnly cookie; refresh token (30 days) stored only as a hash and **rotated** on every use; reuse of an old token revokes all sessions; arctic for Google/GitHub OAuth with state + PKCE; one-time hashed tokens for email verification and reset |
+| `users` | 4, 42 | Profile, settings, timezone, plan, delete account | `GET/PATCH /me`; timezone stored as an IANA name (`Asia/Kolkata`); delete removes all the user's rows in one transaction |
+| `skills` | 5 | Skills, templates | One `skills` table; `template` enum; template fields in `details` JSONB validated by a Zod schema per template; archive instead of delete |
+| `logs` | 6 | Daily logs, log entries | "Today" computed in the user's timezone; upsert one `daily_logs` row per user per local date, then insert the entry, **in one transaction**; clears cached stats |
+| `roadmap` | 7 | Milestones | Ordered list per skill (`position`), status pending/done |
+| `notes` | 8 | Markdown notes | Stored as markdown text; rendered in the app with react-markdown |
+| `practice` | 9, 10 | Practice items, attempts, revision list | Every attempt sets `next_review_at` (1, 3, 7, 15 days); the revision list is "items where next review is today or earlier" |
+| `stats` | 11, 20, 21 | Dashboard, streak, heatmap, charts | SQL `GROUP BY` and window functions for the streak (gaps-and-islands); results cached in Redis with a TTL and cleared when a log changes |
+| `reviews` | 12, 28 | Weekly reviews, comments | One review per user per week (`week_start` unique) |
+| `flashcards` | 15 | Cards, reviews | SM-2 algorithm (ease, interval, due date) updated in a transaction on each review |
+| `language` | 16 | Phrases, writings | Template-specific tables for Language skills |
+| `recordings` | 17 | Audio uploads | Browser uploads straight to S3 with a 5-minute presigned URL; API checks size, type and quota first, then verifies the file with `HEAD` |
+| `exports` | 18, 42 | CSV export | Row created as PROCESSING, a worker job streams rows from Postgres to S3, status READY, download through a short presigned link, expired files deleted daily |
+| `integrations` | 19 | GitHub webhook | HMAC signature check with `timingSafeEqual`; `webhook_events.delivery_id` unique so a repeat delivery does nothing; heavy work in a queue job |
+| `notifications` | 13, 14, 22 | Emails and in-app notifications | BullMQ job schedulers run every 15 minutes, pick users whose local time is about 19:00 and who haven't logged; job id `reminder:<user>:<date>` blocks duplicates; SES sends the email; in-app bell uses Server-Sent Events |
+| `groups` | 25, 26, 27, 29, 31, 32 | Groups, members, roles, invites, leaderboard, challenges, feed | Member roles owner/mentor/member checked on every group action; invite tokens hashed with expiry; weekly leaderboard in a Redis sorted set; feed with cursor pagination |
+| `badges` | 30 | Achievements | Checked when events happen (log created, streak reached) |
+| `public` | 23, 24 | Public profile, share links | Opt-in only; signed tokens with expiry; pages rendered by the Astro site with OG images |
+| `ai` | 33–37, 40 | Ask notes, corrector, quiz, planner, MCP, usage limits | Claude API (cheap model for easy tasks, stronger model for hard ones); notes split into chunks, embedded, stored in pgvector, searched for "ask my notes"; structured JSON output for the corrector; a Redis counter per user per day for limits; MCP server exposes read-only tools |
+| `billing` | 38, 39 | Plans, payments | Razorpay subscription; payment webhook (signature + unique event id) sets `users.plan`; feature flags read the plan |
+| `admin` | 41 | Admin APIs | Admin role only; every action written to `audit_logs` |
+
+Shared building blocks used by every module:
+
+| Block | File | Job |
+|---|---|---|
+| `dispatcher` | `middleware/dispatcher.ts` | Runs the controller, sends `{ status, statusCode, data }` |
+| `handleError` | `middleware/handle-error.ts` | One place for all errors; hides internal errors from users |
+| `notFound` | `middleware/not-found.ts` | 404 for unknown routes |
+| `ErrorHandler` | `helper/error-handler.ts` | Throw it for expected errors: `new ErrorHandler(404, "Skill not found")` |
+| `validate` (next) | `middleware/validate.ts` | Zod check of body, params and query; 400 with field errors |
+| `currentUser` (next) | `middleware/current-user.ts` | Sets `req.user` from the verified token; until auth exists, from a seeded dev user |
+| `getLocalDate` (next) | `utils/date.ts` | The user's "today" from their timezone |
+| Pagination (next) | `utils/pagination.ts` | `?limit&after` -> `{ items, nextCursor }` |
+
+---
+
+## 10. Architecture
+
+### 10.1 Style: modular monolith + separate worker
+
+- **One backend app**, split into modules with clear boundaries.
+- **One separate worker** runs background jobs (emails, exports, AI).
+- **Multi-tenant:** every row belongs to a user (`user_id`) and every query filters by it.
+
+**Why not microservices:** they add network calls, distributed failures, data-consistency problems and deployment work that a small team doesn't need. Shopify still runs its core as a modular monolith and scales by splitting data, not code. A module becomes its own service only when it needs separate scaling or releases.
+
+### 10.2 Big picture
+
+```
+Browser --> app.skillstreakr.com  (React + Vite)       --+
+Browser --> skillstreakr.com      (Astro, public pages)   +--> api.skillstreakr.com (Node.js + Express)
+GitHub / Razorpay webhooks ------------------------------+          |
+                                                                   +--> PostgreSQL
+                                                                   +--> Redis --> Worker (Node.js + BullMQ)
+                                                                   |                +--> SES (email)
+                                                                   |                +--> S3 (files)
+                                                                   |                +--> Claude API (AI)
+                                                                   +--> S3 (presigned upload/download)
+```
+
+### 10.3 Layers inside the API
+
+```
+bin/www.ts -> app.ts -> /v1 -> modules/v1/index.ts -> <module>.route.ts
+   -> dispatcher -> controller (function) -> service (class) -> repository (class) -> Postgres
+```
+
+| Layer | Allowed | Not allowed |
+|---|---|---|
+| Route | URL + middleware -> controller | Business logic |
+| Controller | Read the request, call the service, return data | SQL, business rules, `res.json` (the dispatcher sends it) |
+| Service | Business rules, transactions, other modules' services | Express `req` / `res` |
+| Repository | Database queries | Business rules |
+
+### 10.4 Scale path
+
+| Users | What changes |
+|---|---|
+| 0 – 1,000 | 1 API + 1 worker + 1 Postgres + 1 Redis. **We start here.** |
+| 10k – 100k | Several API copies behind a load balancer, more Redis caching, a Postgres read replica, a connection pooler, a CDN |
+| 1M+ | Partition big tables (`log_entries` by month), move heavy modules (AI, notifications) to their own services, an event bus (SQS or Kafka), shard users |
+
+---
+
+## 11. Data model
+
+All tables and columns use `snake_case`. Every user-owned table has `user_id` and an index that starts with it.
+
+| Table | Key columns | Notes |
+|---|---|---|
+| `users` | id, email (unique), password_hash, name, timezone, daily_goal_minutes, role, plan, created_at | role: learner / mentor / admin |
+| `oauth_accounts` | id, user_id, provider, provider_user_id | unique (provider, provider_user_id) |
+| `refresh_tokens` | id, user_id, token_hash, expires_at, revoked_at, replaced_by | rotation |
+| `verification_tokens` | id, user_id, type, token_hash, expires_at, used_at | email verification, password reset |
+| `skills` | id, user_id, name, template, color, daily_goal_minutes, archived_at, details (JSONB) | template: GENERAL / PRACTICE / LANGUAGE / COURSE / PROJECT |
+| `daily_logs` | id, user_id, log_date (user's local date) | **unique (user_id, log_date)** |
+| `log_entries` | id, daily_log_id, user_id, skill_id, minutes, kind, note, created_at | kind: STUDY / PRACTICE / REVISION / WRITING / SPEAKING / BUILD |
+| `milestones` | id, user_id, skill_id, title, week, status, position | roadmap |
+| `notes` | id, user_id, skill_id, title, body_md, updated_at | |
+| `practice_items` | id, user_id, skill_id, title, link, topic, difficulty, details (JSONB) | problems / exercises |
+| `practice_attempts` | id, user_id, item_id, attempted_at, solved_alone, minutes, next_review_at | revision list |
+| `flashcards` | id, user_id, skill_id, front, back, ease, interval_days, due_at | SM-2 |
+| `card_reviews` | id, user_id, card_id, rating, reviewed_at | |
+| `phrases` | id, user_id, skill_id, text, meaning, example | Language template |
+| `writings` | id, user_id, skill_id, body, ai_feedback (JSONB), created_at | Language template |
+| `recordings` | id, user_id, skill_id, s3_key, duration_sec, size_bytes, created_at | |
+| `weekly_reviews` | id, user_id, week_start, learned, blockers, next_plan | unique (user_id, week_start) |
+| `groups` | id, name, owner_id, created_at | |
+| `group_members` | group_id, user_id, role, joined_at | role: owner / mentor / member |
+| `invites` | id, group_id, email, token_hash, expires_at, accepted_at | |
+| `comments` | id, author_id, target_type, target_id, body, created_at | |
+| `challenges` | id, group_id, skill_name, rule (JSONB), starts_on, ends_on | |
+| `challenge_participants` | challenge_id, user_id, progress (JSONB) | |
+| `badges` / `user_badges` | code, title / user_id, badge_code, earned_at | |
+| `notifications` | id, user_id, type, payload (JSONB), read_at, created_at | |
+| `share_links` | id, user_id, scope, token_hash, expires_at | |
+| `webhook_events` | id, source, delivery_id (**unique**), payload, processed_at | duplicate protection |
+| `exports` | id, user_id, status, file_key, expires_at | |
+| `ai_usage` | id, user_id, feature, tokens, created_at | limits |
+| `note_embeddings` | id, user_id, note_id, chunk, embedding (vector) | v4 |
+| `subscriptions` | id, user_id, provider, status, plan, current_period_end | v4 |
+| `audit_logs` | id, user_id, action, metadata (JSONB), created_at | admin |
+
+Relationships:
+
+```
+users ──< skills ──< log_entries >── daily_logs >── users
+skills ──< milestones | notes | practice_items ──< practice_attempts
+skills ──< flashcards ──< card_reviews
+users ──< weekly_reviews
+groups ──< group_members >── users
+groups ──< challenges ──< challenge_participants
+```
+
+Rules:
+
+- **One `daily_logs` row per user per local date.** "Today" is computed from the user's timezone, then upserted.
+- **Streak** = consecutive local dates with at least one entry, computed with a SQL window function and cached in Redis.
+- **`user_id` never comes from the client.** Always from the verified token.
+- **Skills are archived, never deleted**, so old logs keep their history.
+- **Times are stored in UTC.** Converted to the user's timezone only at the edges.
+
+---
+
+## 12. Main flows
+
+### 12.1 Signup and login
+
+```
+Browser -> POST /v1/auth/signup {email, password}
+API     -> validate (Zod), hash password (argon2), insert user
+API     -> Set-Cookie: access token (15 min) + refresh token (30 days, HttpOnly)
+
+Later, when the access token expires:
+Browser -> POST /v1/auth/refresh (refresh cookie)
+API     -> token hash exists, not revoked, not expired?
+API     -> revoke the old one, store the new one (rotation)
+API     -> new access + refresh cookies
+```
+
+If an already-revoked refresh token comes back, someone stole it: revoke **all** of that user's tokens and force a new login.
+
+### 12.2 Login with Google
+
+```
+User clicks "Login with Google"
+  -> API creates state + PKCE verifier, stores them in a short cookie
+  -> redirect to Google
+  -> Google redirects to /v1/auth/google/callback?code&state
+  -> API checks state, exchanges the code, reads the profile
+  -> find or create the user + oauth_accounts row
+  -> set session cookies -> redirect to app.skillstreakr.com
+```
+
+### 12.3 Logging a session (the most important flow)
+
+```
+Browser -> POST /v1/logs/entries {skillId, minutes, kind, note}
+API     -> current user from the token, validate input
+API     -> today = the user's local date
+API     -> transaction: upsert daily_logs (user, today) + insert log_entries
+API     -> delete cached stats + streak for this user in Redis
+API     -> 201 Created
+Browser -> GET /v1/stats/dashboard
+API     -> cache miss -> compute from Postgres -> cache with TTL -> return
+```
+
+### 12.4 Daily reminder
+
+```
+Worker scheduler (every 15 minutes)
+  -> users whose local time is about 19:00 and who have no log today
+  -> enqueue "send-reminder" with jobId reminder:<user>:<date> (no duplicates)
+  -> worker sends the email (SES) -> retry with backoff on failure
+```
+
+### 12.5 Recording upload
+
+```
+Browser -> POST /v1/recordings/upload-url {skillId, size, type}
+API     -> size within the limit? audio type? plan quota left?
+API     -> presigned PUT URL (5 min) + key
+Browser -> PUT the file straight to S3
+Browser -> POST /v1/recordings {key, duration}
+API     -> HEAD the key (exists, right size) -> 201 Created
+```
+
+The file never passes through our API.
+
+### 12.6 GitHub webhook
+
+```
+GitHub -> POST /v1/webhooks/github
+  -> verify HMAC signature (timingSafeEqual) -> 401 if bad
+  -> insert webhook_events (delivery_id unique) -> already there? 200, do nothing
+  -> enqueue "process-github-push" -> 200 quickly
+Worker -> match the repo to the user's Project skill -> add commits to today's log
+```
+
+### 12.7 Data export
+
+```
+POST /v1/exports -> row PROCESSING -> enqueue a job
+Worker -> stream CSV rows from Postgres to S3 -> READY, expires in 1 day
+GET /v1/exports/:id/download -> owner check -> 302 to a 5-minute presigned URL
+Daily job -> delete expired files -> EXPIRED
+```
+
+### 12.8 Share report link
+
+```
+POST /v1/share {scope: "month"} -> signed token, expires in 7 days
+Friend opens skillstreakr.com/r/<token> (Astro, server-rendered)
+  -> valid token? render the page + preview tags + preview image
+  -> expired or invalid -> "This link has expired"
+```
+
+### 12.9 Payment
+
+```
+User -> "Upgrade to Pro" -> API creates a Razorpay subscription -> checkout
+Razorpay -> webhook (signature checked, event id unique) -> subscription ACTIVE
+  -> users.plan = PRO -> Pro features unlock
+Renewal / failure webhooks -> status update -> grace period -> back to FREE
+```
+
+---
+
+## 13. API overview
+
+Base URL: `https://api.skillstreakr.com/v1` (local: `http://localhost:4000/v1`). JSON everywhere. Lists use **cursor pagination**: `?limit=20&after=<cursor>` returns `{ items, nextCursor }`.
+
+| Area | Endpoints |
+|---|---|
+| Health | `GET /health` |
+| Auth | `POST /auth/signup`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `GET /auth/google`, `GET /auth/google/callback`, `POST /auth/verify-email`, `POST /auth/forgot-password`, `POST /auth/reset-password` |
+| Me | `GET /me`, `PATCH /me`, `DELETE /me` |
+| Skills | `GET /skills`, `POST /skills`, `PATCH /skills/:id`, `POST /skills/:id/archive` |
+| Logs | `GET /logs?from&to`, `POST /logs/entries`, `PATCH /logs/entries/:id`, `DELETE /logs/entries/:id` |
+| Stats | `GET /stats/dashboard`, `GET /stats/heatmap?year`, `GET /stats/skills/:id` |
+| Roadmap | `GET /skills/:id/milestones`, `POST /skills/:id/milestones`, `PATCH /milestones/:id` |
+| Notes | `GET /notes?skillId`, `POST /notes`, `PATCH /notes/:id`, `DELETE /notes/:id` |
+| Practice | `GET /practice/items?skillId&topic`, `POST /practice/items`, `POST /practice/items/:id/attempts`, `GET /practice/revision` |
+| Flashcards | `GET /flashcards/due`, `POST /flashcards`, `POST /flashcards/:id/review` |
+| Recordings | `POST /recordings/upload-url`, `POST /recordings`, `GET /recordings` |
+| Reviews | `GET /weekly-reviews`, `PUT /weekly-reviews/:weekStart` |
+| Groups | `POST /groups`, `POST /groups/:id/invites`, `POST /invites/:token/accept`, `GET /groups/:id/leaderboard`, `GET /groups/:id/feed` |
+| Exports | `POST /exports`, `GET /exports/:id/download` |
+| Share | `POST /share`, `GET /public/share/:token` |
+| Webhooks | `POST /webhooks/github`, `POST /webhooks/razorpay` |
+| AI | `POST /ai/ask`, `POST /ai/correct`, `POST /ai/quiz`, `POST /ai/plan` |
+
+---
+
+## 14. Security and privacy
+
+| Area | Rule |
+|---|---|
+| Passwords | argon2; never logged; minimum length + common-password check |
+| Tokens | Short access token; refresh rotation with reuse detection; only hashes stored |
+| Cookies | `HttpOnly`, `Secure`, `SameSite=Lax`, domain `.skillstreakr.com` |
+| CSRF | SameSite=Lax + JSON-only API + CORS allows only our origins |
+| Input | Zod validation on every request, job and webhook |
+| Authorization | Every query scoped by `user_id`; group actions check the member's role |
+| Rate limits | Login, signup, password reset, AI, webhooks |
+| Webhooks | Signature check + unique delivery id |
+| Files | Private bucket; short presigned URLs; size and type limits |
+| Public data | Public profile and share links are opt-in and expire |
+| Secrets | Only in env / a secret manager; `.env` never committed |
+| Dependencies | `npm audit`, few dependencies, lockfile committed |
+| Privacy | Delete account + download my data; no personal data in logs |
+| Errors | Internal errors never reach the user; they get "Something went wrong" |
+| OWASP Top 10 | Every item reviewed before launch |
+
+---
+
+## 15. Scalability rules
+
+Applied from day one:
+
+| Rule | Meaning | Why |
+|---|---|---|
+| **Stateless API** | No sessions in server memory | Many API copies can run behind a load balancer |
+| **`user_id` in every query** + indexes like `(user_id, date)` | Multi-tenant and fast | One user's queries stay fast with 100k users |
+| **Cursor pagination** | `?after=<id>`, not offset | Offset gets slow on big tables |
+| **Heavy work in queues** | Emails, exports, reports, AI in the worker | The API stays fast; the worker scales on its own |
+| **Cache hot reads** | Dashboard stats in Redis (TTL + clear on change) | Less database load |
+| **Rate limiting** | Login, AI, webhooks | Stops abuse and cost spikes |
+| **Idempotency** | Unique webhook delivery ids, fixed job ids | No duplicate work |
+| **Connection pooling** | Neon pooler / PgBouncer | Many API copies don't run out of DB connections |
+| **UTC in the DB, timezone per user** | "Today" in the user's timezone | Global users |
+| **Config from env** | No hard-coded secrets or URLs | Different environments |
+
+---
+
+## 16. SEO plan
+
+The app is a single-page app, which search engines and link previews read badly. So:
+
+| Page | Needs SEO? | Solution | When |
+|---|---|---|---|
+| Dashboard and all logged-in pages | No | SPA with `noindex` | v1 |
+| Landing, features, pricing, blog | Yes | Static HTML built by **Astro** | End of v2 |
+| Public profile `/u/:username` | Yes + preview | Server-rendered in Astro | v3 |
+| Share report `/r/:token` | Preview | Server-rendered + preview image (satori) | v3 |
+
+Every public page has a title, description, canonical link, Open Graph and Twitter tags, plus `sitemap.xml`, `robots.txt` and structured data. Public profiles are opt-in; otherwise 404 + `noindex`.
+
+---
+
+## 17. Plans and pricing
+
+Prices are a first guess, to be decided after talking to users.
+
+| | **Free** | **Pro** (about ₹99–199 / month) |
+|---|---|---|
+| Logs, streak, dashboard | Unlimited | Unlimited |
+| Skills | Up to 5 | Unlimited |
+| Revision list, notes, flashcards | Yes | Yes |
+| Groups | 1 | Unlimited + mentor tools |
+| History | Last 3 months | Full history + CSV export |
+| AI (ask notes, corrector, quiz, planner) | No | Yes, with a daily limit |
+
+How payment works: Razorpay subscription in India (Stripe later for other countries). A payment webhook sets the user's plan, and features check the plan through feature flags. Payment fees are about 2–3% per payment plus GST; a business account needs KYC.
+
+---
+
+## 18. Running cost
+
+Prices change; check each service's pricing page before buying.
+
+| Stage | When | Cost |
+|---|---|---|
+| Build + learn (all local) | Months 1–4 | **₹0** (domain about ₹1,000 / year, optional) |
+| First launch (0–100 users) | Months 4–6 | **₹0–2,000 / month** (free tiers) |
+| About 1,000 users + AI | Later | **₹3,000–8,000 / month** |
+| About 10,000 users | If it grows | **₹15,000–40,000 / month** (Pro income should cover it) |
+
+- **AI** is the most variable cost: about ₹1–5 per active user per month with cheap models. It stays Pro-only with daily limits and caching.
+- **GST registration** is needed above ₹20 lakh a year for services (check the current rule).
+- **Cheapest option with the most learning:** one VPS (about ₹400–1,000 / month) running Docker Compose.
+
+Money-saving rules: everything local in Months 1–4; an AWS billing alert from day one; cheap AI model + per-user limit + caching; one database and one Redis; limit recording size and delete old files with an S3 lifecycle rule.
+
+---
+
+## 19. Roadmap and current status
+
+| Week | Build |
+|---|---|
+| 1 | Repos, Express `/health`, Docker, DB design, Drizzle, skills + daily log CRUD (dev user) |
+| 2 | Logs API complete, entries per skill, errors + logging |
+| 3 | Shared Zod schemas, app shell, skills + log screens |
+| 4 | Signup / login, HttpOnly cookies |
+| 5 | Refresh rotation, logout, Google/GitHub OAuth, email verification |
+| 6 | Dashboard stats, streak (window functions), indexes, `EXPLAIN` |
+| 7 | Practice items + attempts + revision list; flashcards SM-2 |
+| 8 | Webhook table design, Supertest + Testcontainers tests |
+| 9 | Recordings (presigned upload), CSV export |
+| 10 | Emails via SES (Mailpit locally) |
+| 11 | Reminder + weekly report jobs; GitHub webhook |
+| 12 | pino, Sentry, OpenTelemetry, alerts |
+| 13–14 | Dashboard polish, heatmap, charts |
+| 15 | System design document for SkillStreakr |
+| 16 | Deploy v1 + v2, README, demo video |
+| 17–24 | v3 Social + Astro site + v4 AI and payments |
+
+**Status today:**
+
+| Done | Next |
+|---|---|
+| Both repositories, Express API with `/v1/health`, error handling, logging, env check, Docker Compose, tests, git hooks | ESLint + CI, DB design note, Drizzle schema + seed, `skills` and `logs` modules |
+| React app with Tailwind, shadcn/ui, TanStack Router + Query | API client, skills and today's log screens |
+
+---
+
+## 20. Hosting and domains
+
+| Part | Start (cheap) | Later (learn AWS) |
+|---|---|---|
+| App (SPA) | Cloudflare Pages | S3 + CloudFront |
+| Public site (Astro) | Cloudflare Pages | same |
+| API + worker | Railway / Render / Fly.io | AWS ECS Fargate |
+| Postgres | Neon | AWS RDS |
+| Redis (queue) | Railway Redis / a VPS | ElastiCache |
+| Files + email | AWS S3 + SES | same |
+
+Domains: `skillstreakr.com` (site), `app.skillstreakr.com` (app), `api.skillstreakr.com` (API). All under one domain, so login cookies work.
+
+---
+
+## 21. The name
+
+**SkillStreakr** = skill + streak, the core idea of the app. Checked on 2026-11-16: free on `.com`, `.dev`, `.in`, `.io` and GitHub, and no product with this exact name.
+
+---
+
+## 22. Mistakes we already prevented
+
+| Mistake | What would happen | Our fix |
+|---|---|---|
+| App and API on unrelated domains | Login cookies become cross-site and get blocked | `app.` and `api.` subdomains of one domain |
+| BullMQ on a free serverless Redis | Constant commands burn the free quota | Queue on Railway Redis or a VPS |
+| Storing "today" in UTC | Logs land on the wrong day in other timezones | Local date from the user's timezone |
+| Offset pagination on big tables | Slow pages as data grows | Cursor pagination |
+| Trusting `user_id` from the client | Users could read others' data | `user_id` only from the verified token |
+| Emails / exports inside the request | Slow API, timeouts | Worker + queue |
+| One table per skill type | Schema explosion | Templates + JSONB `details` |
+| Vercel Hobby for a paid product | Breaks its terms of use | Cloudflare Pages |
+| Changing the stack again and again | Lost time | Stack is frozen; change only for a real problem, with the reason written down |
+
+---
+
+## 23. Glossary
+
+| Term | Meaning |
+|---|---|
+| Streak | Number of days in a row with at least one log |
+| Template | The type of a skill; decides its extra fields and screens |
+| Modular monolith | One app split into modules with clear boundaries |
+| Multi-tenant | Many users share one app and database; each sees only their own data |
+| Access / refresh token | Short login token / long token that gets a new access token |
+| Token rotation | Every refresh gives a new refresh token and kills the old one |
+| Presigned URL | A short-lived link that lets the browser upload or download one S3 file |
+| Idempotency | Doing the same request twice has the same effect as doing it once |
+| Webhook | Another service calling our API when something happens |
+| HMAC | A signature that proves a webhook really came from the sender |
+| SM-2 | The spaced-repetition algorithm behind flashcards |
+| RAG | Answering questions by first finding the relevant notes, then asking the AI |
+| Cursor pagination | Next page starts after the last item seen, not at an offset |
+| SSE | Server-Sent Events: the server pushes updates to the browser |
+| OG tags | Tags that make link previews show a title, text and image |
